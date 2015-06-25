@@ -17,8 +17,8 @@ class DBProfilerServiceProvider extends ServiceProvider {
     }
 
     public function boot() {
-        \Event::listen('illuminate.query', '\DBProfiler\QueryLogger@onQuery');
-        \Event::listen('kernel.handled', '\DBProfiler\QueryLogger@onFinish');
+        \Event::listen('illuminate.query', '\DBProfiler\EventsHandler@onQuery');
+        \Event::listen('kernel.handled', '\DBProfiler\EventsHandler@onFinish');
     }
 
 }
