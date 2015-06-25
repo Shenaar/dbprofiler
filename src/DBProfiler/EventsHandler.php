@@ -2,7 +2,7 @@
 
 namespace DBProfiler;
 
-class QueryLogger {
+class EventsHandler {
 
     private $_profiler;
 
