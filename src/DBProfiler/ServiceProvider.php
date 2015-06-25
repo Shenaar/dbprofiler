@@ -3,8 +3,9 @@
 namespace DBProfiler;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Events\Dispatcher;
 
-class DBProfilerServiceProvider extends ServiceProvider {
+class ServiceProvider extends ServiceProvider {
 
     public function register() {
         return $this->app->singleton('DBProfiler', function($app) {
@@ -16,9 +17,9 @@ class DBProfilerServiceProvider extends ServiceProvider {
         return ['DBProfiler'];
     }
 
-    public function boot() {
-        \Event::listen('illuminate.query', '\DBProfiler\EventsHandler@onQuery');
-        \Event::listen('kernel.handled', '\DBProfiler\EventsHandler@onFinish');
+    public function boot(Dispatcher $events) {
+        $events->listen('illuminate.query', '\DBProfiler\EventsHandler@onQuery');
+        $events->listen('kernel.handled', '\DBProfiler\EventsHandler@onFinish');
     }
 
 }
