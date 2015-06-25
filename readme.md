@@ -1,0 +1,1 @@
+Add 'DBProfiler\DBProfilerServiceProvider' to your app.providers config.
