@@ -41,7 +41,7 @@ class DBProfiler {
 
     public function onFinish() {
         $filename = storage_path() . '/logs/query.' . date('d.m.y') . '.log';
-        \File::append($filename, \Request::fullUrl() . ': ' . $this->_queriesCount . ' queries in ' . $this->_totalTime . 'ms.' . PHP_EOL);
+        \File::append($filename, '[' . date('H:i:s') . ']' . \Request::fullUrl() . ': ' . $this->_queriesCount . ' queries in ' . $this->_totalTime . 'ms.' . PHP_EOL);
     }
 
     private function _storeQuery($filename, $sql, $time, $backtrace = true) {
