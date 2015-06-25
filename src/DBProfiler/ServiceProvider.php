@@ -2,10 +2,9 @@
 
 namespace DBProfiler;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Events\Dispatcher;
 
-class ServiceProvider extends ServiceProvider {
+class ServiceProvider extends Illuminate\Support\ServiceProvider {
 
     public function register() {
         return $this->app->singleton('DBProfiler', function($app) {
