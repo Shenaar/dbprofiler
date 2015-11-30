@@ -18,7 +18,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
     }
 
     public function boot(Dispatcher $events, ConfigRepository $config) {
-        $configPath = __DIR__ . '/../config/dbprofiler.php';
+        $configPath = __DIR__ . '/../../config/dbprofiler.php';
 
         if (function_exists('config_path')) {
             $publishPath = config_path('dbprofiler.php');
