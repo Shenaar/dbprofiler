@@ -10,8 +10,10 @@ class RequestQueryHandler {
 
     private $_totalTime = 0;
 
+    private $_limit = 0;
+
     public function __construct(ConfigRepository $config) {
-        ;
+        $this->_limit = $config->get('dbprofiler.request.limit', 0);
     }
 
     public function handle($sql, $bindings, $time) {
@@ -20,6 +22,10 @@ class RequestQueryHandler {
     }
 
     public function onFinish() {
+        if ($this->_queriesCount < $this->_limit) {
+            return;
+        }
+
         $filename = storage_path('/logs/query.' . date('d.m.y') . '.request.log');
 
         $string = '[' . date('H:i:s') . '] ' .
