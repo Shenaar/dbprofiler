@@ -1,18 +1,21 @@
 <?php
 
-namespace DBProfiler;
+namespace Shenaar\DBProfiler;
 
 use \Illuminate\Database\DatabaseManager as DatabaseManager;
 
-class QueryFormatter {
+class QueryFormatter
+{
 
     private $_grammar = [];
 
-    public function __construct(DatabaseManager $manager) {
+    public function __construct(DatabaseManager $manager) 
+    {
         $this->_grammar = $manager->connection()->getQueryGrammar();
     }
 
-    public function format($query, $bindings) {
+    public function format($query, $bindings) 
+    {
         $res = $query;
 
         try {
@@ -20,7 +23,9 @@ class QueryFormatter {
                 if (is_scalar($value)) {
                     $bindings[$index] = (string)$value;
                 } else if ($value instanceof \DateTime) {
-                    $bindings[$index] = $value->format($this->_grammar->getDateFormat());
+                    $bindings[$index] = $value->format(
+                        $this->_grammar->getDateFormat()
+                    );
                 } else {
                     $bindings[$index] = '?';
                 }

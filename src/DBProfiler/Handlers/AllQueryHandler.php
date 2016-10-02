@@ -1,11 +1,14 @@
 <?php
 
-namespace DBProfiler\Handlers;
+namespace Shenaar\DBProfiler\Handlers;
 
 use Illuminate\Config\Repository as ConfigRepository;
-use DBProfiler\QueryFormatter as QueryFormatter;
+use Shenaar\DBProfiler\QueryFormatter as QueryFormatter;
+use Shenaar\DBProfiler\EventHandlerInterface;
+use Illuminate\Database\Events\QueryExecuted;
 
-class AllQueryHandler {
+class AllQueryHandler implements EventHandlerInterface
+{
 
     private $_queries = [];
 
@@ -15,13 +18,21 @@ class AllQueryHandler {
 
     private $_filename;
 
-    public function __construct(ConfigRepository $config, QueryFormatter $formatter) {
+    public function __construct(ConfigRepository $config, QueryFormatter $formatter) 
+    {
         $this->_defer     = $config->get('dbprofiler.all.defer', true);
         $this->_formatter = $formatter;
-        $this->_filename  = storage_path('/logs/query.' . date('d.m.y') . '.all.log');
+        $this->_filename  = storage_path(
+            '/logs/query.' . date('d.m.y') . '.all.log'
+        );
     }
 
-    public function handle($sql, $bindings, $time) {
+    public function handle(QueryExecuted $event) 
+    {
+        $sql = $event->sql;
+        $time = $event->time;
+        $bindings = $event->bindings;
+
         $item = [
             'query' => $this->_formatter->format($sql, $bindings),
             'time'  => $time,
@@ -34,13 +45,15 @@ class AllQueryHandler {
         }
     }
 
-    public function onFinish() {
+    public function onFinish() 
+    {
         foreach ($this->_queries as $item) {
             $this->_writeQuery($item);
         }
     }
 
-    private function _writeQuery($query) {
+    private function _writeQuery($query) 
+    {
         $string = '[' . date('H:i:s') . '] ' .
             ' (' . $query['time'] . 'ms) ' .
             $query['query'] . PHP_EOL;

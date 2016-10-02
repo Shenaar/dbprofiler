@@ -1,11 +1,14 @@
 <?php
 
-namespace DBProfiler\Handlers;
+namespace Shenaar\DBProfiler\Handlers;
 
 use Illuminate\Config\Repository as ConfigRepository;
-use DBProfiler\QueryFormatter as QueryFormatter;
+use Shenaar\DBProfiler\QueryFormatter as QueryFormatter;
+use Shenaar\DBProfiler\EventHandlerInterface;
+use Illuminate\Database\Events\QueryExecuted;
 
-class SlowQueryHandler {
+class SlowQueryHandler implements EventHandlerInterface
+{
 
     private $_queries = [];
 
@@ -17,14 +20,24 @@ class SlowQueryHandler {
 
     private $_filename;
 
-    public function __construct(ConfigRepository $config, QueryFormatter $formatter) {
+    public function __construct(ConfigRepository $config,
+        QueryFormatter $formatter
+    ) {
+
         $this->_defer     = $config->get('dbprofiler.slow.defer', true);
         $this->_formatter = $formatter;
-        $this->_filename  = storage_path('/logs/query.' . date('d.m.y') . '.slow.log');
+        $this->_filename  = storage_path(
+            '/logs/query.' . date('d.m.y') . '.slow.log'
+        );
         $this->_time      = $config->get('dbprofiler.slow.time', 500);
     }
 
-    public function handle($sql, $bindings, $time) {
+    public function handle(QueryExecuted $event) 
+    {
+        $sql = $event->sql;
+        $time = $event->time;
+        $bindings = $event->bindings;
+
         if ($time < $this->_time) {
             return;
         }
@@ -42,22 +55,26 @@ class SlowQueryHandler {
         }
     }
 
-    public function onFinish() {
+    public function onFinish() 
+    {
         foreach ($this->_queries as $item) {
             $this->_writeQuery($item);
         }
     }
 
-    private function _writeQuery($query) {
+    private function _writeQuery($query) 
+    {
         $string = '[' . date('H:i:s') . '] ' .
             ' (' . $query['time'] . 'ms) ' .
             $query['query'] . PHP_EOL .
-            $query['backtrace'] . PHP_EOL . str_repeat('=', 50) . PHP_EOL . PHP_EOL;
+            $query['backtrace'] . PHP_EOL . str_repeat('=', 50)
+            . PHP_EOL . PHP_EOL;
 
         \File::append($this->_filename, $string);
     }
 
-    private function _getBacktrace() {
+    private function _getBacktrace() 
+    {
         $res = '';
         $backtrace = debug_backtrace();
         array_splice($backtrace, 0, 10);
@@ -70,7 +87,8 @@ class SlowQueryHandler {
 
             if (($file) && $function) {
                 $res .= $res ? PHP_EOL : '';
-                $res .= ($file ? : $class) . '::' . $function . (isset($item['line']) ? ':' . $item['line'] : '');
+                $res .= ($file ? : $class) . '::' . $function
+                    . (isset($item['line']) ? ':' . $item['line'] : '');
             }
         }
 
