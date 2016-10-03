@@ -20,7 +20,8 @@ class SlowQueryHandler implements EventHandlerInterface
 
     private $_filename;
 
-    public function __construct(ConfigRepository $config,
+    public function __construct(
+        ConfigRepository $config,
         QueryFormatter $formatter
     ) {
 
@@ -32,7 +33,7 @@ class SlowQueryHandler implements EventHandlerInterface
         $this->_time      = $config->get('dbprofiler.slow.time', 500);
     }
 
-    public function handle(QueryExecuted $event) 
+    public function handle(QueryExecuted $event)
     {
         $sql = $event->sql;
         $time = $event->time;
@@ -55,14 +56,14 @@ class SlowQueryHandler implements EventHandlerInterface
         }
     }
 
-    public function onFinish() 
+    public function onFinish()
     {
         foreach ($this->_queries as $item) {
             $this->_writeQuery($item);
         }
     }
 
-    private function _writeQuery($query) 
+    private function _writeQuery($query)
     {
         $string = '[' . date('H:i:s') . '] ' .
             ' (' . $query['time'] . 'ms) ' .
@@ -73,7 +74,7 @@ class SlowQueryHandler implements EventHandlerInterface
         \File::append($this->_filename, $string);
     }
 
-    private function _getBacktrace() 
+    private function _getBacktrace()
     {
         $res = '';
         $backtrace = debug_backtrace();

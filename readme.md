@@ -1,1 +1,1 @@
-Add 'Shenaar\DBProfiler\ServiceProvider' to your app.providers config.
+Add 'Shenaar\DBProfiler\DBProfilerServiceProvider' to your app.providers config.

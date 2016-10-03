@@ -18,7 +18,7 @@ class AllQueryHandler implements EventHandlerInterface
 
     private $_filename;
 
-    public function __construct(ConfigRepository $config, QueryFormatter $formatter) 
+    public function __construct(ConfigRepository $config, QueryFormatter $formatter)
     {
         $this->_defer     = $config->get('dbprofiler.all.defer', true);
         $this->_formatter = $formatter;
@@ -27,7 +27,7 @@ class AllQueryHandler implements EventHandlerInterface
         );
     }
 
-    public function handle(QueryExecuted $event) 
+    public function handle(QueryExecuted $event)
     {
         $sql = $event->sql;
         $time = $event->time;
@@ -45,14 +45,14 @@ class AllQueryHandler implements EventHandlerInterface
         }
     }
 
-    public function onFinish() 
+    public function onFinish()
     {
         foreach ($this->_queries as $item) {
             $this->_writeQuery($item);
         }
     }
 
-    private function _writeQuery($query) 
+    private function _writeQuery($query)
     {
         $string = '[' . date('H:i:s') . '] ' .
             ' (' . $query['time'] . 'ms) ' .

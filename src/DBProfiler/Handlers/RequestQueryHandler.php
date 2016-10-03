@@ -15,12 +15,12 @@ class RequestQueryHandler implements EventHandlerInterface
 
     private $_limit = 0;
 
-    public function __construct(ConfigRepository $config) 
+    public function __construct(ConfigRepository $config)
     {
         $this->_limit = $config->get('dbprofiler.request.limit', 0);
     }
 
-    public function handle(QueryExecuted $event) 
+    public function handle(QueryExecuted $event)
     {
         $time = $event->time;
 
@@ -28,7 +28,7 @@ class RequestQueryHandler implements EventHandlerInterface
         $this->_totalTime += $time;
     }
 
-    public function onFinish() 
+    public function onFinish()
     {
         if ($this->_queriesCount < $this->_limit) {
             return;

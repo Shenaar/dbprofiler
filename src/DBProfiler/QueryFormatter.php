@@ -9,12 +9,12 @@ class QueryFormatter
 
     private $_grammar = [];
 
-    public function __construct(DatabaseManager $manager) 
+    public function __construct(DatabaseManager $manager)
     {
         $this->_grammar = $manager->connection()->getQueryGrammar();
     }
 
-    public function format($query, $bindings) 
+    public function format($query, $bindings)
     {
         $res = $query;
 
