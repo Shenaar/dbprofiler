@@ -28,7 +28,8 @@ class QueryFormatter {
 
             $res = str_replace('?', '"%s"', $query);
             $res = vsprintf($res, $bindings);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            return $query;
         }
 
         return $res;
