@@ -107,23 +107,25 @@ class SlowQueryHandler implements EventHandlerInterface
      */
     private function getBacktrace()
     {
-        $res = '';
-        $backtrace = debug_backtrace();
-        array_splice($backtrace, 0, 10);
-        array_splice($backtrace, 10);
+        $result = '';
+        collect(debug_backtrace())
+            ->filter(function ($item) {
+                $file = array_get($item, 'file', null);
 
-        foreach ($backtrace as $item) {
-            $class = array_get($item, 'class');
-            $function = array_get($item, 'function');
-            $file  = array_get($item, 'file');
+                return !$file || !str_contains($file, 'vendor');
+            })
+            ->each(function ($item) use (&$result) {
+                $class = array_get($item, 'class');
+                $function = array_get($item, 'function');
+                $file  = array_get($item, 'file');
 
-            if (($file) && $function) {
-                $res .= $res ? PHP_EOL : '';
-                $res .= ($file ? : $class) . '::' . $function
-                    . (isset($item['line']) ? ':' . $item['line'] : '');
-            }
-        }
+                if (($file) && $function) {
+                    $result .= $result ? PHP_EOL : '';
+                    $result .= ($file ? : $class) . '::' . $function
+                        . (isset($item['line']) ? ':' . $item['line'] : '');
+                }
+            });
 
-        return $res;
+        return $result;
     }
 }
