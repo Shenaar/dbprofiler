@@ -5,26 +5,39 @@ namespace Shenaar\DBProfiler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Database\Events\QueryExecuted;
-use Shenaar\DBProfiler\QueryFormatter;
+use Illuminate\Support\ServiceProvider;
 
-class DBProfilerServiceProvider extends \Illuminate\Support\ServiceProvider
+/**
+ * Registers handlers.
+ */
+class DBProfilerServiceProvider extends ServiceProvider
 {
-
+    /**
+     *
+     */
     public function register()
     {
-        return $this->app->singleton(
+        $this->app->singleton(
             QueryFormatter::class, function ($app) {
                 return new QueryFormatter($app['db']);
             }
         );
     }
 
+    /**
+     * @return string
+     */
     public function provides()
     {
         return QueryFormatter::class;
     }
 
-    public function boot(Dispatcher $events, ConfigRepository $config)
+    /**
+     * @param Dispatcher $events
+     * @param ConfigRepository $config
+     * @param QueryFormatter $formatter
+     */
+    public function boot(Dispatcher $events, ConfigRepository $config, QueryFormatter $formatter)
     {
         $configPath = __DIR__ . '/../../config/dbprofiler.php';
 
@@ -50,7 +63,7 @@ class DBProfilerServiceProvider extends \Illuminate\Support\ServiceProvider
         if ($config->get('dbprofiler.all.enabled')) {
             $allHandler = new Handlers\AllQueryHandler(
                 $config,
-                app(QueryFormatter::class)
+                $formatter
             );
 
             $events->listen(QueryExecuted::class, [$allHandler, 'handle']);
@@ -60,7 +73,7 @@ class DBProfilerServiceProvider extends \Illuminate\Support\ServiceProvider
         if ($config->get('dbprofiler.slow.enabled')) {
             $slowHandler = new Handlers\SlowQueryHandler(
                 $config,
-                app(QueryFormatter::class)
+                $formatter
             );
 
             $events->listen(QueryExecuted::class, [$slowHandler, 'handle']);

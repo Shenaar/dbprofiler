@@ -3,30 +3,49 @@
 namespace Shenaar\DBProfiler\Handlers;
 
 use Illuminate\Config\Repository as ConfigRepository;
-use Shenaar\DBProfiler\QueryFormatter as QueryFormatter;
-use Shenaar\DBProfiler\EventHandlerInterface;
 use Illuminate\Database\Events\QueryExecuted;
 
+use Shenaar\DBProfiler\EventHandlerInterface;
+use Shenaar\DBProfiler\QueryFormatter as QueryFormatter;
+
+/**
+ * Logs all executed queries.
+ */
 class AllQueryHandler implements EventHandlerInterface
 {
+    /**
+     * @var array
+     */
+    private $queries;
 
-    private $_queries = [];
+    /**
+     * @var bool|mixed
+     */
+    private $defer;
 
-    private $_defer = true;
+    /**
+     * @var QueryFormatter
+     */
+    private $formatter;
 
-    private $_formatter = null;
-
-    private $_filename;
+    /**
+     * @var
+     */
+    private $filename;
 
     public function __construct(ConfigRepository $config, QueryFormatter $formatter)
     {
-        $this->_defer     = $config->get('dbprofiler.all.defer', true);
-        $this->_formatter = $formatter;
-        $this->_filename  = storage_path(
+        $this->defer     = $config->get('dbprofiler.all.defer', true);
+        $this->formatter = $formatter;
+        $this->queries   = [];
+        $this->filename  = storage_path(
             '/logs/query.' . date('d.m.y') . '.all.log'
         );
     }
 
+    /**
+     * @inheritdoc
+     */
     public function handle(QueryExecuted $event)
     {
         $sql = $event->sql;
@@ -34,31 +53,37 @@ class AllQueryHandler implements EventHandlerInterface
         $bindings = $event->bindings;
 
         $item = [
-            'query' => $this->_formatter->format($sql, $bindings),
+            'query' => $this->formatter->format($sql, $bindings),
             'time'  => $time,
         ];
 
-        if ($this->_defer) {
-            $this->_queries[] = $item;
+        if ($this->defer) {
+            $this->queries[] = $item;
         } else {
-            $this->_writeQuery($item);
+            $this->writeQuery($item);
         }
     }
 
+    /**
+     * @inheritdoc
+     */
     public function onFinish()
     {
-        foreach ($this->_queries as $item) {
-            $this->_writeQuery($item);
+        foreach ($this->queries as $item) {
+            $this->writeQuery($item);
         }
     }
 
-    private function _writeQuery($query)
+    /**
+     * @param array $query
+     */
+    private function writeQuery($query)
     {
         $string = '[' . date('H:i:s') . '] ' .
             ' (' . $query['time'] . 'ms) ' .
             $query['query'] . PHP_EOL;
 
-        \File::append($this->_filename, $string);
+        \File::append($this->filename, $string);
     }
 
 }
