@@ -3,67 +3,95 @@
 namespace Shenaar\DBProfiler\Handlers;
 
 use Illuminate\Config\Repository as ConfigRepository;
-use Shenaar\DBProfiler\QueryFormatter as QueryFormatter;
-use Shenaar\DBProfiler\EventHandlerInterface;
 use Illuminate\Database\Events\QueryExecuted;
 
+use Shenaar\DBProfiler\EventHandlerInterface;
+use Shenaar\DBProfiler\QueryFormatter as QueryFormatter;
+
+/**
+ * Logs slow queries.
+ */
 class SlowQueryHandler implements EventHandlerInterface
 {
+    /**
+     * @var array
+     */
+    private $queries = [];
 
-    private $_queries = [];
+    /**
+     * @var bool
+     */
+    private $defer;
 
-    private $_defer = true;
+    /**
+     * @var int
+     */
+    private $time;
 
-    private $_time;
+    /**
+     * @var QueryFormatter
+     */
+    private $formatter;
 
-    private $_formatter = null;
+    /**
+     * @var string
+     */
+    private $filename;
 
-    private $_filename;
+    /**
+     * @param ConfigRepository $config
+     * @param QueryFormatter $formatter
+     */
+    public function __construct(ConfigRepository $config, QueryFormatter $formatter) {
 
-    public function __construct(
-        ConfigRepository $config,
-        QueryFormatter $formatter
-    ) {
-
-        $this->_defer     = $config->get('dbprofiler.slow.defer', true);
-        $this->_formatter = $formatter;
-        $this->_filename  = storage_path(
+        $this->defer     = (bool) $config->get('dbprofiler.slow.defer', true);
+        $this->formatter = $formatter;
+        $this->filename  = storage_path(
             '/logs/query.' . date('d.m.y') . '.slow.log'
         );
-        $this->_time      = $config->get('dbprofiler.slow.time', 500);
+        $this->time      = $config->get('dbprofiler.slow.time', 500);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function handle(QueryExecuted $event)
     {
         $sql = $event->sql;
         $time = $event->time;
         $bindings = $event->bindings;
 
-        if ($time < $this->_time) {
+        if ($time < $this->time) {
             return;
         }
 
         $item = [
-            'query'     => $this->_formatter->format($sql, $bindings),
+            'query'     => $this->formatter->format($sql, $bindings),
             'time'      => $time,
-            'backtrace' => $this->_getBacktrace(),
+            'backtrace' => $this->getBacktrace(),
         ];
 
-        if ($this->_defer) {
-            $this->_queries[] = $item;
+        if ($this->defer) {
+            $this->queries[] = $item;
         } else {
-            $this->_writeQuery($item);
+            $this->writeQuery($item);
         }
     }
 
+    /**
+     * @inheritdoc
+     */
     public function onFinish()
     {
-        foreach ($this->_queries as $item) {
-            $this->_writeQuery($item);
+        foreach ($this->queries as $item) {
+            $this->writeQuery($item);
         }
     }
 
-    private function _writeQuery($query)
+    /**
+     * @param array $query
+     */
+    private function writeQuery($query)
     {
         $string = '[' . date('H:i:s') . '] ' .
             ' (' . $query['time'] . 'ms) ' .
@@ -71,10 +99,13 @@ class SlowQueryHandler implements EventHandlerInterface
             $query['backtrace'] . PHP_EOL . str_repeat('=', 50)
             . PHP_EOL . PHP_EOL;
 
-        \File::append($this->_filename, $string);
+        \File::append($this->filename, $string);
     }
 
-    private function _getBacktrace()
+    /**
+     * @return string
+     */
+    private function getBacktrace()
     {
         $res = '';
         $backtrace = debug_backtrace();

@@ -3,34 +3,55 @@
 namespace Shenaar\DBProfiler\Handlers;
 
 use Illuminate\Config\Repository as ConfigRepository;
-use Shenaar\DBProfiler\EventHandlerInterface;
 use Illuminate\Database\Events\QueryExecuted;
 
+use Shenaar\DBProfiler\EventHandlerInterface;
+
+/**
+ * Logs amount and time of queries per request.
+ */
 class RequestQueryHandler implements EventHandlerInterface
 {
+    /**
+     * @var int
+     */
+    private $queriesCount = 0;
 
-    private $_queriesCount = 0;
+    /**
+     * @var int
+     */
+    private $totalTime = 0;
 
-    private $_totalTime = 0;
+    /**
+     * @var int
+     */
+    private $limit = 0;
 
-    private $_limit = 0;
-
+    /**
+     * @param ConfigRepository $config
+     */
     public function __construct(ConfigRepository $config)
     {
-        $this->_limit = $config->get('dbprofiler.request.limit', 0);
+        $this->limit = (int) $config->get('dbprofiler.request.limit', 0);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function handle(QueryExecuted $event)
     {
         $time = $event->time;
 
-        ++$this->_queriesCount;
-        $this->_totalTime += $time;
+        ++$this->queriesCount;
+        $this->totalTime += $time;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function onFinish()
     {
-        if ($this->_queriesCount < $this->_limit) {
+        if ($this->queriesCount < $this->limit) {
             return;
         }
 
@@ -40,10 +61,9 @@ class RequestQueryHandler implements EventHandlerInterface
 
         $string = '[' . date('H:i:s') . '] ' .
             \Request::fullUrl() . ': ' .
-            $this->_queriesCount . ' queries in ' .
-            $this->_totalTime . 'ms.' . PHP_EOL;
+            $this->queriesCount . ' queries in ' .
+            $this->totalTime . 'ms.' . PHP_EOL;
 
         \File::append($filename, $string);
     }
-
 }

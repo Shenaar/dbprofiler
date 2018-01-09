@@ -2,29 +2,42 @@
 
 namespace Shenaar\DBProfiler;
 
-use \Illuminate\Database\DatabaseManager as DatabaseManager;
+use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\Query\Grammars\Grammar;
 
+/**
+ * Used for converting a query to a string.
+ */
 class QueryFormatter
 {
+    /**
+     * @var Grammar
+     */
+    private $grammar = [];
 
-    private $_grammar = [];
-
+    /**
+     * @param DatabaseManager $manager
+     */
     public function __construct(DatabaseManager $manager)
     {
-        $this->_grammar = $manager->connection()->getQueryGrammar();
+        $this->grammar = $manager->connection()->getQueryGrammar();
     }
 
+    /**
+     * @param string $query
+     * @param array  $bindings
+     *
+     * @return mixed|string
+     */
     public function format($query, $bindings)
     {
-        $res = $query;
-
         try {
             foreach ($bindings as $index => $value) {
                 if (is_scalar($value)) {
                     $bindings[$index] = (string)$value;
                 } else if ($value instanceof \DateTime) {
                     $bindings[$index] = $value->format(
-                        $this->_grammar->getDateFormat()
+                        $this->grammar->getDateFormat()
                     );
                 } else {
                     $bindings[$index] = '?';
