@@ -107,23 +107,34 @@ class SlowQueryHandler implements EventHandlerInterface
      */
     private function getBacktrace()
     {
-        $res = '';
-        $backtrace = debug_backtrace();
-        array_splice($backtrace, 0, 10);
-        array_splice($backtrace, 10);
+        $result = '';
+        collect(debug_backtrace())
+            ->filter(function ($item) {
+                $function = array_get($item, 'function');
+                $file     = array_get($item, 'file');
+                $class    = array_get($item, 'class');
 
-        foreach ($backtrace as $item) {
-            $class = array_get($item, 'class');
-            $function = array_get($item, 'function');
-            $file  = array_get($item, 'file');
+                if (!$function) {
+                    return false;
+                }
 
-            if (($file) && $function) {
-                $res .= $res ? PHP_EOL : '';
-                $res .= ($file ? : $class) . '::' . $function
-                    . (isset($item['line']) ? ':' . $item['line'] : '');
-            }
-        }
+                if ($file && str_contains($file, 'vendor')) {
+                    return false;
+                }
 
-        return $res;
+                return $file || $class;
+            })
+            ->each(function ($item) use (&$result) {
+                $function = array_get($item, 'function');
+                $file     = array_get($item, 'file');
+                $line     = array_get($item, 'line');
+                $class    = array_get($item, 'class');
+
+                $result .= $result ? PHP_EOL : '';
+                $result .= ($file ? : $class) . '::' . $function . '()'
+                    . ($line ? ':' . $item['line'] : '');
+            });
+
+        return $result;
     }
 }
