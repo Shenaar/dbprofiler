@@ -4,6 +4,7 @@ namespace Shenaar\DBProfiler\Handlers;
 
 use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Collection;
 
 use Shenaar\DBProfiler\EventHandlerInterface;
 
@@ -60,10 +61,24 @@ class RequestQueryHandler implements EventHandlerInterface
         );
 
         $string = '[' . date('H:i:s') . '] ' .
-            \Request::fullUrl() . ': ' .
+            $this->getUrl() . ': ' .
             $this->queriesCount . ' queries in ' .
             $this->totalTime . 'ms.' . PHP_EOL;
 
         \File::append($filename, $string);
+    }
+
+    /**
+     * Returns URL or running artisan command.
+     *
+     * @return string
+     */
+    protected function getUrl()
+    {
+        if (app()->runningInConsole() && !app()->runningUnitTests()) {
+            return (new Collection(\Request::server('argv', [])))->implode(' ');
+        }
+
+        return \Request::fullUrl();
     }
 }

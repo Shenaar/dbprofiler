@@ -57,7 +57,10 @@ class DBProfilerServiceProvider extends ServiceProvider
             $requestHandler = new Handlers\RequestQueryHandler($config);
 
             $events->listen(QueryExecuted::class, [$requestHandler, 'handle']);
-            $events->listen('kernel.handled', [$requestHandler, 'onFinish']);
+
+            $this->app->terminating(function () use ($requestHandler) {
+                $requestHandler->onFinish();
+            });
         }
 
         if ($config->get('dbprofiler.all.enabled')) {
@@ -67,7 +70,10 @@ class DBProfilerServiceProvider extends ServiceProvider
             );
 
             $events->listen(QueryExecuted::class, [$allHandler, 'handle']);
-            $events->listen('kernel.handled', [$allHandler, 'onFinish']);
+
+            $this->app->terminating(function () use ($allHandler) {
+                $allHandler->onFinish();
+            });
         }
 
         if ($config->get('dbprofiler.slow.enabled')) {
@@ -77,7 +83,10 @@ class DBProfilerServiceProvider extends ServiceProvider
             );
 
             $events->listen(QueryExecuted::class, [$slowHandler, 'handle']);
-            $events->listen('kernel.handled', [$slowHandler, 'onFinish']);
+
+            $this->app->terminating(function () use ($slowHandler) {
+                $slowHandler->onFinish();
+            });
         }
     }
 
