@@ -79,7 +79,7 @@ class AllQueryHandler implements EventHandlerInterface
      */
     private function writeQuery($query)
     {
-        $string = '[' . date('H:i:s') . '] ' .
+        $string = '[' . date('H:i:s') . ']' .
             ' (' . $query['time'] . 'ms) ' .
             $query['query'] . PHP_EOL;
 

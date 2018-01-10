@@ -93,7 +93,7 @@ class SlowQueryHandler implements EventHandlerInterface
      */
     private function writeQuery($query)
     {
-        $string = '[' . date('H:i:s') . '] ' .
+        $string = '[' . date('H:i:s') . ']' .
             ' (' . $query['time'] . 'ms) ' .
             $query['query'] . PHP_EOL .
             $query['backtrace'] . PHP_EOL . str_repeat('=', 50)
