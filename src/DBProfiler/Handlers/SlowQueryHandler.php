@@ -110,20 +110,29 @@ class SlowQueryHandler implements EventHandlerInterface
         $result = '';
         collect(debug_backtrace())
             ->filter(function ($item) {
-                $file = array_get($item, 'file', null);
+                $function = array_get($item, 'function');
+                $file     = array_get($item, 'file');
+                $class    = array_get($item, 'class');
 
-                return !$file || !str_contains($file, 'vendor');
+                if (!$function) {
+                    return false;
+                }
+
+                if ($file && str_contains($file, 'vendor')) {
+                    return false;
+                }
+
+                return $file || $class;
             })
             ->each(function ($item) use (&$result) {
-                $class = array_get($item, 'class');
                 $function = array_get($item, 'function');
-                $file  = array_get($item, 'file');
+                $file     = array_get($item, 'file');
+                $line     = array_get($item, 'line');
+                $class    = array_get($item, 'class');
 
-                if (($file) && $function) {
-                    $result .= $result ? PHP_EOL : '';
-                    $result .= ($file ? : $class) . '::' . $function
-                        . (isset($item['line']) ? ':' . $item['line'] : '');
-                }
+                $result .= $result ? PHP_EOL : '';
+                $result .= ($file ? : $class) . '::' . $function . '()'
+                    . ($line ? ':' . $item['line'] : '');
             });
 
         return $result;
