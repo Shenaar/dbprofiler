@@ -17,5 +17,12 @@
         "psr-4": {
             "Shenaar\\DBProfiler\\": "src/DBProfiler"
         }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Shenaar\\DBProfiler\\DBProfilerServiceProvider"
+            ]
+        }
     }
 }
